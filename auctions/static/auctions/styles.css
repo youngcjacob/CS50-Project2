@@ -1,3 +1,16 @@
 body {
     padding: 10px;
+    background-color: blue;
 }
+ head {
+     background-color: green;
+     color: green;
+ }
+
+ h1 {
+     background-color: blue;
+
+ }
+ input {
+     align-items: right;
+ }
