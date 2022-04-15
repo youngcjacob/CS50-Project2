@@ -1,0 +1,54 @@
+{% extends "auctions/layout.html" %} {% block body %}
+{% if user.is_authenticated %}
+
+<div>
+    <h2>Listing for {{listing.title}}</h2>
+    <h6>Description: {{listing.description}}</h6>
+    {% if user == listing.listing_creator %}
+    This is your listing, click here to close the listing: <input type='submit' value='Close Listing'>
+    {% endif %}
+    <br><img src="{{listing.url_image}}" height="200" width="200" alt="No Image" />
+</div>
+<br />
+<div>
+    <form action="{% url 'watchlist' %}" method="post">
+        {% csrf_token %}
+
+        {% if watchlist == None %}
+        Add {{listing.title}} to watchlist?
+        <input type="checkbox" value="no" />
+        {% else%}
+        Remove {{listing.title}} from watchlist?
+        <input type="checkbox" checked />
+        {% endif %}
+    </form>
+    <br><br>
+    <h6><strong>Bid Details</strong></h6>
+    Current bid: ${{listing.starting_bid}}<br>
+    Enter new bid?
+    <form action="{% url 'add_bid' %}" method='post'>
+        <input type="int" placeholder="{{listing.starting_bid}}" default="{{listing.starting_bid}}" />
+    </form>
+
+</div>
+<div>
+    <br>
+    <h6><strong>Comments</strong></h6>
+    {% for comment in comments %}
+    {{comment}}:comments<br>
+    {% endfor %}
+    <form action="{% url 'add_comment' %}" method='post'>
+        <input type="submit">
+        <input type="text" placeholder="Add comment">
+    </form><br>
+</div>
+
+
+{% else %}
+<div>
+    <h2>Listing for {{listing.title}}</h2>
+    <h6>Description: {{listing.description}}</h6>
+    <img src="{{listing.url_image}}" height="200" width="200" alt="No Image" /><br /><br />
+    Current bid: ${{listing.starting_bid}}
+</div>
+{% endif %} {% endblock %}

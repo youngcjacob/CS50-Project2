@@ -1,20 +1,29 @@
-{% extends "auctions/layout.html" %} 
+{% extends "auctions/layout.html" %}
 
-{% block body %} 
+{% block body %}
 
 <h2>Create New Listings</h2>
-    <form action="{% url 'submit_listing' %}" type="post">
-        {% csrf_token %} 
-        <label for="Title">Title</label>
-        <input type="text" name="Title" id="Title"><br>
-        <label for="Description">Description</label>
-        <input type="text" name="Description" id="Description"><br>
-        <label for="Bid">Bid</label>
-        <input type="text" name="Bid" id ="Bid"><br>
-        <label for="Image">Image</label>
-        <input type="text" name="Image" id="Image"><br>
-        <input type="submit" value="Submit" name="listing">
+
+{% if user.is_authenticated %}
+{% if message == True %}
+{{message}}
+{% else %}
+<div>
+    <form action="{% url 'create' %}" method="post">
+        {% csrf_token %}
+        {{form}}
+        <input type="submit" title="Submit">
     </form>
+</div>
+{% endif %}
 
 
-{% endblock %} 
+
+
+{% else %}
+Not signed in.
+{% endif %}
+
+
+
+{% endblock %}
