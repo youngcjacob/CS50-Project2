@@ -11,15 +11,17 @@
 </div>
 <br />
 <div>
-    <form action="{% url 'watchlist' %}" method="post">
+    <form action="{% url 'add_watchlist' %}" method="post">
         {% csrf_token %}
+        <input type='hidden' name='listing_id' value="{{listing.id}}">
 
         {% if watchlist == None %}
         Add {{listing.title}} to watchlist?
-        <input type="checkbox" value="no" />
+        <input type='submit' name='Add' value='Add'>
+
         {% else%}
         Remove {{listing.title}} from watchlist?
-        <input type="checkbox" checked />
+        <input type='submit' name='Remove' value='Remove'>
         {% endif %}
     </form>
     <br><br>
@@ -27,7 +29,9 @@
     Current bid: ${{listing.starting_bid}}<br>
     Enter new bid?
     <form action="{% url 'add_bid' %}" method='post'>
-        <input type="int" placeholder="{{listing.starting_bid}}" default="{{listing.starting_bid}}" />
+        {% csrf_token %}
+        <input type="int" name='bid_amount' placeholder="{{listing.starting_bid}}" default="{{listing.starting_bid}}" />
+        <input type='submit' value='Submit bid'>
     </form>
 
 </div>
@@ -38,8 +42,9 @@
     {{comment}}:comments<br>
     {% endfor %}
     <form action="{% url 'add_comment' %}" method='post'>
-        <input type="submit">
+        {% csrf_token %}
         <input type="text" placeholder="Add comment">
+        <input type="submit">
     </form><br>
 </div>
 

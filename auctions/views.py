@@ -111,8 +111,35 @@ def create(request):
 
 
 def add_watchlist(request):
+    listing = Auction_listing.objects.get(id=request.POST['listing_id'])
+    listing_id = request.POST['listing_id']
+    try:
+        watchlist_add = request.POST["Add"]
+        add_to_watchlist = Watchlist(
+            auction_listing=listing, user=request.user)
+        add_to_watchlist.save()
+    except:
+        watchlist_remove = request.POST["Remove"]
+        remove_from_watchlist = Watchlist.objects.get(
+            auction_listing=listing)
+        remove_from_watchlist.delete()
 
-    return render(request, "auctions/watchlist.html")
+    try:
+        watchlist = Watchlist.objects.get(
+            auction_listing=listing_id, user=request.user)
+    except:
+        watchlist = None
+    try:
+        comments = Comment.objects.all()
+        comments = comments.filter(auction_listing=listing_id)
+    except:
+        comments = None
+    return render(request, "auctions/listing.html",
+                  {
+                      "listing": listing,
+                      "watchlist": watchlist,
+                      "comments": comments
+                  })
 
 
 def categories(request):
@@ -140,12 +167,21 @@ def listing(request, listing_title):
                   })
 
 
+def watchlist(request):
+    watchlist_listings = Watchlist.objects.all()
+    watchlist_listings = watchlist_listings.filter(user=request.user)
+
+    return render(request, "auctions/watchlist.html", {
+        "listings": watchlist_listings
+    })
+
+
 def add_comment(request):
     pass
 
 
 def add_bid(request):
-    pass
+    return HttpResponse(list(request.POST.items()))
 
 
 def closed(request):
