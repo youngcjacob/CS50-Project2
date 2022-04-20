@@ -4,10 +4,10 @@
 
 <h2>Closed Listings</h2>
 {% for listing in listings%}
-<h2>Listing for {{listing.title}}</h2>
+<h2><a href="{% url 'listing' listing.id %}">{{listing.title}}</a></h2>
 <h6>Description: {{listing.description}}</h6>
 <img src="{{listing.url_image}}" height="200" width="200" alt="No Image" /><br /><br />
-Current bid: ${{listing.starting_bid}}
+Sold for: ${{listing.starting_bid}}
 {{listing.listing_status}}
 {%endfor%}
 

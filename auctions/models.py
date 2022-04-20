@@ -18,7 +18,9 @@ class Auction_listing(models.Model):
     listing_status = models.BooleanField(default=True)
     listing_creator = models.ForeignKey(User,
                                         on_delete=models.CASCADE, related_name="listing_creator")
-    highest_bidder = models.CharField(max_length=24, default="No Bids")
+    highest_bidder = models.ForeignKey(User,
+                                       on_delete=models.CASCADE, related_name="Highest_bidder")
+    #models.CharField(max_length=24, default="No Bids")
 
     def __str__(self):
         return f"Check out this listing of a {self.title}. It has the following features: {self.description}."
@@ -43,7 +45,7 @@ class Comment(models.Model):
         User, on_delete=models.CASCADE, related_name="user_comment")
 
     def __str__(self):
-        return f"The {self.auction_listing.title}: {self.comment}"
+        return f"{self.comment}"
 
 
 class Watchlist(models.Model):
@@ -54,3 +56,10 @@ class Watchlist(models.Model):
 
     def __str__(self):
         return f"{self.user} has {self.auction_listing.title} on their watchlist"
+
+
+class Category(models.Model):
+    category = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"{self.category}"

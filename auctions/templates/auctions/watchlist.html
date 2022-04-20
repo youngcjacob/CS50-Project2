@@ -4,10 +4,12 @@
 
 <h2>Watchlist</h2>
 {% for listing in listings%}
+{% if listing.auction_listing.listing_status == True%}
 <h3><a href="{% url 'listing' listing.auction_listing.id %}">{{listing.auction_listing.title}}</a></h3>
 <img src="{{listing.auction_listing.url_image}}" height="200" width="200" alt="No Image">
 <li>{{listing.auction_listing.description}}</li>
 <li>$ {{listing.auction_listing.starting_bid}}</li>
+{% endif %}
 {% endfor %}
 
 {% endblock %}

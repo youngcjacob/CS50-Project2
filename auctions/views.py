@@ -8,7 +8,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django import forms
 
-from .models import Auction_listing, User, Comment, Bid, Watchlist
+from .models import Auction_listing, User, Comment, Bid, Watchlist, Category
 
 
 class NewListingForm(forms.Form):
@@ -17,7 +17,6 @@ class NewListingForm(forms.Form):
     starting_bid = forms.IntegerField(label="Bid")
     url_image = forms.URLField(label="Image URL")
     category = forms.CharField(label="Category")
-    #listing_creator = forms.CharField(label="Username")
 
 
 def index(request):
@@ -86,6 +85,7 @@ def create(request):
                       {"form": NewListingForm()})
     elif request.method == "POST":
         listing = NewListingForm(request.POST)
+
         try:
             if listing.is_valid():
                 user = request.user
@@ -101,18 +101,33 @@ def create(request):
                     starting_bid=bid,
                     url_image=url_image,
                     category=category,
-                    listing_creator=user
+                    listing_creator=user,
+                    highest_bidder=user
                 )
                 a.save()
+                listing_details = Auction_listing.objects.get(title=title)
+                add_bid = Bid(
+                    bid=bid, auction_listing=listing_details, user=user)
+                add_bid.save()
+                categories = Category.objects.all()
+
+                if len(categories.filter(category=category)) == 0:
+                    create_cat = Category(category=category)
+                    create_cat.save()
+
                 return HttpResponseRedirect(reverse("index"))
         except IntegrityError:
-            return render(request, "auctions/create.html",
-                          {"message": "Duplicate title, please create a new listing"})
+            return render(request, "auctions/error.html",
+                          {"Message": "Duplicate title, please create a new listing"})
 
 
 def add_watchlist(request):
     listing = Auction_listing.objects.get(id=request.POST['listing_id'])
     listing_id = request.POST['listing_id']
+    bids = Bid.objects.all()
+    bids = Bid.objects.filter(auction_listing=listing)
+    current_bid = list(bids.values())[len(bids)-1]['bid']
+
     try:
         watchlist_add = request.POST["Add"]
         add_to_watchlist = Watchlist(
@@ -123,7 +138,6 @@ def add_watchlist(request):
         remove_from_watchlist = Watchlist.objects.get(
             auction_listing=listing)
         remove_from_watchlist.delete()
-
     try:
         watchlist = Watchlist.objects.get(
             auction_listing=listing_id, user=request.user)
@@ -138,17 +152,34 @@ def add_watchlist(request):
                   {
                       "listing": listing,
                       "watchlist": watchlist,
-                      "comments": comments
+                      "comments": comments,
+                      "bid": current_bid
                   })
 
 
 def categories(request):
-    return render(request, "auctions/categories.html")
+    #listings = Auction_listing.objects.all()
+    categories = Category.objects.all()
+    return render(request, "auctions/categories.html", {
+        'categories': categories
+    })
+
+
+def filtered_categories(request, category):
+    all_listings = Auction_listing.objects.all()
+    listings = all_listings.filter(category=category, listing_status=True)
+    return render(request, "auctions/filtered_categories.html", {
+        'listings': listings,
+        'category': category
+    })
 
 
 def listing(request, listing_title):
     # filter to the title of the listing and the current user
     listing = Auction_listing.objects.get(id=listing_title)
+    bids = Bid.objects.all()
+    bids = Bid.objects.filter(auction_listing=listing)
+    current_bid = list(bids.values())[len(bids)-1]['bid']
     try:
         watchlist = Watchlist.objects.get(
             auction_listing=listing_title, user=request.user)
@@ -163,7 +194,9 @@ def listing(request, listing_title):
                   {
                       "listing": listing,
                       "watchlist": watchlist,
-                      "comments": comments
+                      "comments": comments,
+                      "bid": current_bid
+
                   })
 
 
@@ -177,11 +210,34 @@ def watchlist(request):
 
 
 def add_comment(request):
-    pass
+    listing_details = Auction_listing.objects.get(
+        id=request.POST['listing_id'])
+    comment = request.POST['comment']
+    new_comment = Comment(
+        comment=comment, auction_listing=listing_details, user=request.user)
+    new_comment.save()
+
+    return listing(request, listing_details.id)
 
 
 def add_bid(request):
-    return HttpResponse(list(request.POST.items()))
+    bid_amount = int(request.POST['new_bid'])  # captured bid amount
+    listing_item = request.POST['listing_id']  # captures item
+    all_bids = Bid.objects.all()
+    current_bid = all_bids.filter(
+        auction_listing=listing_item)  # gets the correct object
+    current_bid = list(current_bid.values())[
+        0]['bid']  # provides a list of values
+    if current_bid > bid_amount:
+        return render(request, "auctions/error.html",
+                      {"Message": "Please enter a value greater than the current bid"})
+    else:
+        add_bid = Bid(bid=bid_amount,
+                      auction_listing=Auction_listing.objects.get(id=listing_item), user=request.user)
+        add_bid.save()
+        Auction_listing.objects.filter(id=listing_item).update(
+            highest_bidder=request.user)
+        return listing(request, listing_item)
 
 
 def closed(request):
@@ -190,3 +246,9 @@ def closed(request):
     return render(request, "auctions/closed.html", {
         "listings": listings
     })
+
+
+def close_listing(request):
+    update_listing = Auction_listing.objects.filter(
+        id=request.POST['listing_id']).update(listing_status=False)
+    return listing(request, request.POST['listing_id'])

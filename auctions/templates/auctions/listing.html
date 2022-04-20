@@ -2,12 +2,32 @@
 {% if user.is_authenticated %}
 
 <div>
+    {%if listing.listing_status == False%}
+    {% if listing.highest_bidder == user%}
+    <h4> Congratulations, you have won this listing! </h4>
+    {% endif %}
+    <div>
+        <h2>Listing for {{listing.title}}</h2>
+        <h6>Description: {{listing.description}}</h6>
+        <img src="{{listing.url_image}}" height="200" width="200" alt="No Image" /><br /><br />
+        Sold for: ${{bid}}
+    </div>
+    {% else%}
     <h2>Listing for {{listing.title}}</h2>
     <h6>Description: {{listing.description}}</h6>
+
+
     {% if user == listing.listing_creator %}
-    This is your listing, click here to close the listing: <input type='submit' value='Close Listing'>
+    <form action="{% url 'close_listing' %}" method='post'>
+        {% csrf_token%}
+        This is your listing, click here to close the listing: <input type='submit' name="Close_listing"
+            value="Close Listing">
+        <input type='hidden' name='listing_id' value="{{listing.id}}">
+    </form>
     {% endif %}
+
     <br><img src="{{listing.url_image}}" height="200" width="200" alt="No Image" />
+
 </div>
 <br />
 <div>
@@ -26,28 +46,30 @@
     </form>
     <br><br>
     <h6><strong>Bid Details</strong></h6>
-    Current bid: ${{listing.starting_bid}}<br>
+    Current bid: ${{bid}}<br>
     Enter new bid?
     <form action="{% url 'add_bid' %}" method='post'>
         {% csrf_token %}
-        <input type="int" name='bid_amount' placeholder="{{listing.starting_bid}}" default="{{listing.starting_bid}}" />
+        <input type="int" name='new_bid' placeholder="Initial Listing Price: ${{listing.starting_bid}}"
+            default="{{listing.starting_bid}}" />
         <input type='submit' value='Submit bid'>
-    </form>
-
+        <input type='hidden' name='listing_id' value="{{listing.id}}"> </form>
 </div>
 <div>
     <br>
     <h6><strong>Comments</strong></h6>
-    {% for comment in comments %}
-    {{comment}}:comments<br>
-    {% endfor %}
     <form action="{% url 'add_comment' %}" method='post'>
         {% csrf_token %}
-        <input type="text" placeholder="Add comment">
+        <input type="text" placeholder="Add comment" name='comment'>
         <input type="submit">
+        <input type='hidden' name='listing_id' value="{{listing.id}}">
     </form><br>
-</div>
+    {% for comment in comments %}
+    <li>{{comment}}<br>
+        {% endfor %}
 
+</div>
+{% endif %}
 
 {% else %}
 <div>
